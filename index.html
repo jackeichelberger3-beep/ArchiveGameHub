@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Game Hub</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0f172a; color: #e2e8f0; font-family: system-ui, sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ---------- MENU ---------- */
+  #menu {
+    max-width: 960px; margin: 0 auto; padding: 64px 24px 40px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 16px; border-radius: 999px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    font-size: 14px; color: #cbd5e1; margin-bottom: 24px;
+  }
+  h1 {
+    font-size: 48px; font-weight: 700; letter-spacing: -0.02em;
+    background: linear-gradient(to right, #fff, #94a3b8);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-align: center;
+  }
+  .subtitle { margin-top: 16px; color: #94a3b8; font-size: 18px; text-align: center; }
+
+  /* The grid is inside a scrollable area so many games stay reachable. */
+  .scroll {
+    width: 100%; margin-top: 40px; max-height: calc(100vh - 280px);
+    overflow-y: auto; padding: 4px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    display: block; text-decoration: none; color: inherit;
+    padding: 24px; border-radius: 16px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+    transition: transform 0.25s, background 0.25s, border-color 0.25s;
+  }
+  .card:hover {
+    transform: translateY(-4px); background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.2);
+  }
+  .emoji { font-size: 40px; margin-bottom: 16px; }
+  .card h2 { font-size: 20px; font-weight: 600; color: #fff; }
+  .card p { margin-top: 4px; font-size: 14px; color: #94a3b8; }
+  .play { display: inline-flex; margin-top: 20px; font-size: 14px; color: #cbd5e1; }
+  .card:hover .play { color: #fff; }
+
+  .footer { margin-top: 48px; text-align: center; font-size: 12px; color: #475569; }
+  code { color: #64748b; }
+
+  /* ---------- PLAYER ---------- */
+  #player { position: fixed; inset: 0; display: flex; flex-direction: column; background: #020617; }
+  .bar {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; background: rgba(15,23,42,0.9);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .dot {
+    width: 14px; height: 14px; border-radius: 999px; cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .dot:hover { transform: scale(1.15); }
+  .dot.red { background: #ef4444; }
+  .dot.yellow { background: #eab308; }
+  .dot.green { background: #22c55e; }
+  #title { margin-left: 4px; font-size: 14px; color: #94a3b8; }
+  #frame { flex: 1; width: 100%; border: 0; }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+  <!-- ===== MENU ===== -->
+  <div id="menu">
+    <div class="badge">🎮 Game Hub</div>
+    <h1>Pick a game</h1>
+    <p class="subtitle">A little collection of games. Click one to play.</p>
+
+    <div class="scroll">
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <p class="footer">
+      Add your own games in the <code>GAMES</code> list at the top of this file,
+      and drop the HTML in the <code>games/</code> folder.
+    </p>
+  </div>
+
+  <!-- ===== PLAYER (window-style controls in the corner) =====
+       🔴 red    -> close  (back to the menu)
+       🟡 yellow -> panic  (opens a blank tab to hide the game; game keeps running here)
+       🟢 green  -> fullscreen the game
+  -->
+  <div id="player" class="hidden">
+    <div class="bar">
+      <div class="dot red"    onclick="closeGame()"  title="Close — back to menu"></div>
+      <div class="dot yellow" onclick="panic()"      title="Hide — open a blank tab"></div>
+      <div class="dot green"  onclick="fullscreen()" title="Fullscreen"></div>
+      <span id="title"></span>
+    </div>
+    <iframe id="frame" title="game"></iframe>
+  </div>
+
+  <script>
+    // 🎮 GAMES LIST — to add a game:
+    //   1. Put your game's HTML file in the "games/" folder (e.g. games/mygame.html)
+    //   2. Add a line below using that path
+    //   3. Save — it shows up on the menu automatically.
+    const GAMES = [
+      { title: "Snake",       emoji: "🐍", description: "Eat the fruit, grow longer, don't crash.",  file: "games/snake.html" },
+      { title: "Tic-Tac-Toe", emoji: "❌", description: "Classic 3-in-a-row against the computer.",   file: "games/tictactoe.html" },
+      { title: "Memory",      emoji: "🧠", description: "Flip the cards and match every pair.",       file: "games/memory.html" },
+    ];
+
+    const grid   = document.getElementById('grid');
+    const menu   = document.getElementById('menu');
+    const player = document.getElementById('player');
+    const frame  = document.getElementById('frame');
+    const titleEl = document.getElementById('title');
+
+    GAMES.forEach(g => {
+      const a = document.createElement('a');
+      a.href = '#';
+      a.className = 'card';
+      a.innerHTML =
+        '<div class="emoji">' + g.emoji + '</div>' +
+        '<h2>' + g.title + '</h2>' +
+        '<p>' + g.description + '</p>' +
+        '<span class="play">Play →</span>';
+      a.onclick = function (e) { e.preventDefault(); openGame(g); };
+      grid.appendChild(a);
+    });
+
+    function openGame(g) {
+      titleEl.textContent = g.emoji + ' ' + g.title;
+      frame.src = g.file;
+      player.classList.remove('hidden');
+      menu.classList.add('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeGame() {
+      frame.src = '';
+      player.classList.add('hidden');
+      menu.classList.remove('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Opens a blank tab to hide what you're doing; the game keeps playing here.
+    function panic() { window.open('about:blank', '_blank'); }
+
+    function fullscreen() {
+      var el = document.getElementById('player');
+      if (document.fullscreenElement) { document.exitFullscreen(); }
+      else if (el.requestFullscreen) { el.requestFullscreen(); }
+    }
+  </script>
+</body>
+</html>
