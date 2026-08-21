@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Embed Player</title>
+    <style>
+        /* Remove default margins and hide scrollbars on the main page */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Make the embedded website fill the entire screen */
+        .embed-container {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Position the button in the top-right corner */
+        .corner-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-size: 14px;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            z-index: 9999; /* Ensures the button stays on top of the iframe */
+        }
+
+        .corner-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- The Button: target="_blank" opens the link in a new, blank tab -->
+    <a href="https://jackeichelberger3-beep.github.io/rbmk1000simulation/" target="_blank" class="corner-button">About Page</a>
+
+    <!-- The Embedded Website: Change the src URL to the website you want to display -->
+    <iframe src="https://jackeichelberger3-beep.github.io/rbmk1000simulation/" class="embed-container"></iframe>
+
+</body>
+</html>
